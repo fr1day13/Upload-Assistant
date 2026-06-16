@@ -463,6 +463,8 @@ async def process_meta(meta: Meta, base_dir: str, bot: Any = None) -> None:
     except Exception as e:
         console.print(f"Error in gather_prep: {e}")
         console.print(traceback.format_exc())
+        if should_skip_queue_item_on_error(meta):
+            raise
         return
 
     meta['emby_debug'] = meta.get('emby_debug') if meta.get('emby_debug', False) else config['DEFAULT'].get('emby_debug', False)
