@@ -72,6 +72,7 @@ class TmdbManager:
         mode: str = "discord",
         category_preference: Optional[str] = None,
         imdb_info: Optional[dict[str, Any]] = None,
+        unattended: bool = False,
     ) -> tuple[str, Union[int, str], str, bool]:
         return await get_tmdb_from_imdb(
             imdb_id=imdb_id,
@@ -82,6 +83,7 @@ class TmdbManager:
             mode=mode,
             category_preference=category_preference,
             imdb_info=imdb_info,
+            unattended=unattended,
         )
 
     async def get_tmdb_id(
@@ -292,7 +294,8 @@ async def get_tmdb_from_imdb(
     debug: bool = False,
     mode: str = "discord",
     category_preference: Optional[str] = None,
-    imdb_info: Optional[dict[str, Any]] = None
+    imdb_info: Optional[dict[str, Any]] = None,
+    unattended: bool = False,
 ) -> tuple[str, Union[int, str], str, bool]:
     """Fetches TMDb ID using IMDb or TVDb ID.
 
@@ -400,9 +403,11 @@ async def get_tmdb_from_imdb(
     category = category or "MOVIE"
 
     # **User Prompt for Manual TMDb ID Entry**
-    if tmdb_id in ('None', '', None, 0, '0') and mode == "cli":
+    if tmdb_id in ('None', '', None, 0, '0') and mode == "cli" and not unattended:
         console.print('[yellow]Unable to find a matching TMDb entry[/yellow]')
         tmdb_input = console.input("Please enter TMDb ID (format: tv/12345 or movie/12345): ") or ""
+        if tmdb_input.strip().lower() in {"s", "skip"}:
+            return category, 0, original_language, filename_search
         category, tmdb_id = _get_parser().parse_tmdb_id(tmdb_input, category)
 
     return category, tmdb_id, original_language, filename_search

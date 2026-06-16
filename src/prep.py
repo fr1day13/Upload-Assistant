@@ -897,7 +897,8 @@ class Prep:
                 debug=meta.get('debug', False),
                 mode=meta.get('mode', 'discord'),
                 category_preference=meta.get('category'),
-                imdb_info=meta.get('imdb_info', None)
+                imdb_info=meta.get('imdb_info', None),
+                unattended=bool(meta.get('unattended', False)),
             )
 
             meta['category'] = category
@@ -983,6 +984,8 @@ class Prep:
             meta['tmdb_id'] = _to_int(tmdb_id)
             meta['original_language'] = original_language
             meta['no_ids'] = filename_search
+            if meta['tmdb_id'] == 0:
+                raise ValueError("No TMDB ID found. Skipping this item.")
 
         tmdb_id_value = _to_int(meta.get('tmdb_id'))
         if tmdb_id_value != 0:
@@ -999,8 +1002,7 @@ class Prep:
             try:
                 title = meta['title'].lower().strip()
             except KeyError:
-                console.print("[red]Title is missing from TMDB....")
-                sys.exit(1)
+                raise ValueError("Title is missing from TMDB. Skipping this item.") from None
             aka = meta.get('imdb_info', {}).get('title', "").strip().lower()
             imdb_aka = meta.get('imdb_info', {}).get('aka', "").strip().lower()
             year = str(meta.get('imdb_info', {}).get('year', ""))
