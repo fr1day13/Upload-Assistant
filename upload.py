@@ -30,6 +30,7 @@ from cogs.redaction import Redaction
 from discordbot import DiscordNotifier
 from src.add_comparison import ComparisonManager
 from src.args import Args
+from src.audio import LossyDtsDuplicateError
 from src.cleanup import cleanup_manager
 from src.clients import Clients
 from src.console import console
@@ -1192,6 +1193,41 @@ async def save_processed_file(log_file: str, file_path: str) -> None:
         await f.write(json.dumps(processed_files_clean, indent=4))
 
 
+def should_skip_queue_item_on_error(meta: Meta) -> bool:
+    return bool(meta.get('unattended') and meta.get('queue') is not None)
+
+
+async def mark_queue_item_skipped_after_error(
+    meta: Meta,
+    log_file: str | None,
+    current_item_path: str,
+    path: str,
+    processed_files_count: int,
+    skipped_files_count: int,
+    total_files: int,
+    error: Exception,
+) -> tuple[int, int]:
+    item_path = current_item_path or path
+    item_name = os.path.basename(item_path) if item_path else "current queue item"
+    console.print(f"[bold red]Skipping {item_name} due to error: {error}[/bold red]")
+    processed_files_count += 1
+    skipped_files_count += 1
+    console.print(f"[cyan]Processed {processed_files_count}/{total_files} files with {skipped_files_count} skipped uploading.")
+
+    if log_file and (not meta.get('debug', False) or "debug" in os.path.basename(log_file)):
+        if meta.get('site_upload_queue'):
+            await QueueManager.save_processed_path(log_file, item_path)
+        else:
+            await save_processed_file(log_file, path)
+
+    with contextlib.suppress(Exception):
+        await cleanup_manager.cleanup()
+    gc.collect()
+    cleanup_manager.reset_terminal()
+
+    return processed_files_count, skipped_files_count
+
+
 def get_local_version(version_file: str) -> Optional[str]:
     """Extracts the local version from the version.py file."""
     try:
@@ -1677,6 +1713,18 @@ async def do_the_thing(base_dir: str) -> None:
             except Exception as e:
                 console.print(f"[red]Exception: '{path}': {e}")
                 cleanup_manager.reset_terminal()
+                if should_skip_queue_item_on_error(meta):
+                    processed_files_count, skipped_files_count = await mark_queue_item_skipped_after_error(
+                        meta,
+                        log_file,
+                        current_item_path,
+                        path,
+                        processed_files_count,
+                        skipped_files_count,
+                        total_files,
+                        e,
+                    )
+                    continue
 
             discord_bot_token = discord_config.get('discord_bot_token') if discord_config is not None else None
             only_unattended = bool(discord_config.get('only_unattended', False)) if discord_config is not None else False
@@ -1719,7 +1767,36 @@ async def do_the_thing(base_dir: str) -> None:
 
             console.print(f"[green]Gathering info for {os.path.basename(path)}")
 
-            await process_meta(meta, base_dir, bot=bot)
+            try:
+                await process_meta(meta, base_dir, bot=bot)
+            except LossyDtsDuplicateError as e:
+                if should_skip_queue_item_on_error(meta):
+                    processed_files_count, skipped_files_count = await mark_queue_item_skipped_after_error(
+                        meta,
+                        log_file,
+                        current_item_path,
+                        path,
+                        processed_files_count,
+                        skipped_files_count,
+                        total_files,
+                        e,
+                    )
+                    continue
+                raise
+            except Exception as e:
+                if should_skip_queue_item_on_error(meta):
+                    processed_files_count, skipped_files_count = await mark_queue_item_skipped_after_error(
+                        meta,
+                        log_file,
+                        current_item_path,
+                        path,
+                        processed_files_count,
+                        skipped_files_count,
+                        total_files,
+                        e,
+                    )
+                    continue
+                raise
             tracker_setup = TRACKER_SETUP(config=config)
             if 'we_are_uploading' not in meta or not meta.get('we_are_uploading', False):
                 if config['DEFAULT'].get('cross_seeding', True):
