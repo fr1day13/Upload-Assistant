@@ -385,7 +385,8 @@ async def get_tmdb_from_imdb(
         year,
         "MOVIE",
         secondary_title=fallback_movie_title,
-        debug=debug
+        debug=debug,
+        unattended=unattended,
     )
 
     # If no results, try as TV
@@ -395,7 +396,8 @@ async def get_tmdb_from_imdb(
             year,
             "TV",
             secondary_title=fallback_movie_title,
-            debug=debug
+            debug=debug,
+            unattended=unattended,
         )
 
     # Extract necessary values from the result
@@ -961,6 +963,8 @@ async def get_tmdb_id(
 
     # No match found, prompt user if in CLI mode
     console.print("[bold red]Unable to find TMDb match using any search[/bold red]")
+    if unattended:
+        return 0, category
     try:
         tmdb_input = cli_ui.ask_string("Please enter TMDb ID in this format: tv/12345 or movie/12345")
     except EOFError:
@@ -970,6 +974,8 @@ async def get_tmdb_id(
         sys.exit(1)
     if tmdb_input is None:
         tmdb_input = ""
+    if str(tmdb_input).strip().lower() in {"s", "skip"}:
+        return 0, category
     category, tmdb_id = _get_parser().parse_tmdb_id(tmdb_input, category)
 
     return tmdb_id, category

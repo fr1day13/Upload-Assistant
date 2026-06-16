@@ -977,7 +977,8 @@ class Prep:
                 debug=meta.get('debug', False),
                 mode=meta.get('mode', 'discord'),
                 category_preference=meta.get('category'),
-                imdb_info=meta.get('imdb_info', None)
+                imdb_info=meta.get('imdb_info', None),
+                unattended=bool(meta.get('unattended', False)),
             )
 
             meta['category'] = category
