@@ -20,6 +20,8 @@ DEFAULT_KEY_TYPES: dict[str, tuple[type, ...]] = {
     "update_notification": (bool,),
     "verbose_notification": (bool,),
     "tmdb_api": (str,),
+    "igdb_client_id": (str,),
+    "igdb_client_secret": (str,),
     "btn_api": (str,),
     "img_host_1": (str,),
     "img_host_2": (str,),

@@ -729,6 +729,45 @@ class UploadHelper:
                 return True
             confirm_input = console.input("[bold green]Is this correct?[/bold green] [yellow]y/N/skip[/yellow]: ").strip().lower()
             return "skip" if confirm_input in {"s", "skip"} else confirm_input == 'y'
+        if meta.get('category') == 'GAMES' or meta.get('is_game'):
+            console.print()
+            console.print("[bold yellow]Game Info[/bold yellow]")
+            console.print(f"[bold]Title:[/bold] {meta.get('title', '')}")
+            if meta.get('year'):
+                console.print(f"[bold]Year:[/bold] {meta.get('year')}")
+            if meta.get('platform'):
+                console.print(f"[bold]Platform:[/bold] {meta.get('platform')}")
+            if meta.get('game_subcategory'):
+                subcategory = {
+                    'full_game': 'Full Game',
+                    'full_game_dlc': 'Full Game + DLC',
+                    'dlc': 'DLC only',
+                    'update': 'Update only',
+                }.get(str(meta.get('game_subcategory')), str(meta.get('game_subcategory')))
+                console.print(f"[bold]Release Type:[/bold] {subcategory}")
+            if meta.get('game_version'):
+                console.print(f"[bold]Version:[/bold] {meta.get('game_version')}")
+            if meta.get('developer'):
+                console.print(f"[bold]Developer:[/bold] {meta.get('developer')}")
+            if meta.get('publisher'):
+                console.print(f"[bold]Publisher:[/bold] {meta.get('publisher')}")
+            if meta.get('genres'):
+                console.print(f"[bold]Genre:[/bold] {meta.get('genres')}")
+            console.print("[bold]Category:[/bold] GAMES")
+            console.print()
+            console.print(f"[bold]Name:[/bold] {meta['name']}")
+            if meta.get('igdb_id'):
+                console.print(f"[bold]IGDB:[/bold] https://www.igdb.com/games/{meta['igdb_id']}")
+            if meta.get('steam_url'):
+                console.print(f"[bold]Steam:[/bold] {meta['steam_url']}")
+            console.print(f"[bold]Files:[/bold] {len(meta.get('filelist') or [])}")
+            console.print(f"[bold]Size:[/bold] {self._format_source_size(meta.get('source_size'))}")
+            if meta.get('unattended', False) and not meta.get('unattended_confirm', False) and not meta.get('emby_debug', False):
+                if meta['debug'] is True:
+                    console.print("[bold yellow]Unattended mode is enabled, skipping confirmation.[/bold yellow]")
+                return True
+            confirm_input = console.input("[bold green]Is this correct?[/bold green] [yellow]y/N/skip[/yellow]: ").strip().lower()
+            return "skip" if confirm_input in {"s", "skip"} else confirm_input == 'y'
         console.print()
         console.print("[bold yellow]Database Info[/bold yellow]")
         console.print(f"[bold]Title:[/bold] {meta['title']} ({meta['year']})")

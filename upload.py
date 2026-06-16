@@ -1966,7 +1966,7 @@ async def do_the_thing(base_dir: str) -> None:
                 await tracker_setup.make_trumpable_report(meta, tracker)
 
             find_requests = config['DEFAULT'].get('search_requests', False) if meta.get('search_requests') is None else meta.get('search_requests')
-            if find_requests and not meta.get('is_music') and not meta.get('is_book') and meta['trackers'] not in ([], None, "") and not (meta.get('site_check', False) and not meta['is_disc']):
+            if find_requests and not meta.get('is_music') and not meta.get('is_book') and not meta.get('is_game') and meta['trackers'] not in ([], None, "") and not (meta.get('site_check', False) and not meta['is_disc']):
                 console.print("[green]Searching for requests on supported trackers.....")
                 if meta.get('site_check', False):
                     trackers = meta['requested_trackers']

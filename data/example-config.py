@@ -21,6 +21,10 @@ config = {
         "audible_lookup": True,
         # Audible marketplace TLD, e.g. com, co.uk, de, fr.
         "audible_marketplace": "com",
+        # Optional IGDB metadata lookup for game uploads. IGDB uses Twitch OAuth credentials.
+        # Create an app at https://dev.twitch.tv/console/apps and use the client ID/secret here.
+        "igdb_client_id": "",
+        "igdb_client_secret": "",
 
         # Play the bell sound effect when asking for confirmation
         "sfx_on_prompt": True,

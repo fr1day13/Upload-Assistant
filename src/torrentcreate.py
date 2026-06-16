@@ -216,7 +216,7 @@ class TorrentCreator:
                 include: list[str] = []
                 exclude: list[str] = []
 
-                if meta.get('is_music') or meta.get('is_book'):
+                if meta.get('is_music') or meta.get('is_book') or meta.get('is_game'):
                     include = []
                     exclude = []
                 elif meta['keep_folder']:

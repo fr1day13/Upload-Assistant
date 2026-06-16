@@ -28,6 +28,7 @@ try:
     from src.get_source import get_source
     from src.get_tracker_data import TrackerDataManager
     from src.getseasonep import SeasonEpisodeManager
+    from src.games import GameProcessor, is_game_path
     from src.imdb import imdb_manager
     from src.is_scene import SceneManager
     from src.languages import languages_manager
@@ -166,7 +167,28 @@ class Prep:
         if meta['debug']:
             console.print(f"[cyan]ID: {meta['uuid']}")
 
-        manual_category = str(meta.get('manual_category') or '').strip().upper()
+        raw_manual_category = meta.get('manual_category') or ''
+        if isinstance(raw_manual_category, list):
+            raw_manual_category = raw_manual_category[0] if raw_manual_category else ''
+        manual_category = str(raw_manual_category).strip().upper()
+        if manual_category == 'GAME' or is_game_path(meta['path']):
+            console.print("[yellow]Processing as game[/yellow]")
+            game_processor = GameProcessor(self.config, base_dir)
+            meta = await game_processor.process(meta)
+
+            if not meta.get('emby') and meta.get('trackers'):
+                trackers = meta['trackers']
+            else:
+                default_trackers = self.config['TRACKERS'].get('default_trackers', '')
+                trackers = [tracker.strip() for tracker in default_trackers.split(',')]
+            if isinstance(trackers, str):
+                trackers = [t.strip().upper() for t in trackers.split(',')] if "," in trackers else [trackers.strip().upper()]
+            else:
+                trackers = [t.strip().upper() for t in trackers]
+            meta['trackers'] = trackers
+            meta['requested_trackers'] = trackers
+            return meta
+
         if manual_category == 'BOOK' or is_book_path(meta['path']):
             console.print("[yellow]Processing as book/audiobook[/yellow]")
             book_processor = BookProcessor(self.config, base_dir)

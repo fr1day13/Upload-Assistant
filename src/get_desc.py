@@ -52,7 +52,7 @@ async def gen_desc(
     _takescreens_manager: TakeScreensManager,
     _uploadscreens_manager: UploadScreensManager,
 ) -> dict[str, Any]:
-    if meta.get("is_music") or meta.get("is_book"):
+    if meta.get("is_music") or meta.get("is_book") or meta.get("is_game"):
         description_path = f"{meta['base_dir']}/tmp/{meta['uuid']}/DESCRIPTION.txt"
         if os.path.exists(description_path):
             return meta

@@ -118,7 +118,27 @@ class NameManager:
         # YAY NAMING FUN
         name = ""
         potential_missing: list[str] = []
-        if meta['category'] == "MUSIC":
+        if meta.get('is_game') or meta.get('category') == "GAMES":
+            game_title = str(meta.get('title', '')).strip()
+            game_year = str(meta.get('year', '')).strip()
+            platform = str(meta.get('platform', '')).strip()
+            game_type = str(meta.get('game_subcategory', '')).strip()
+            version = str(meta.get('game_version', '')).strip()
+            tag = str(meta.get('tag') or '').strip()
+
+            subcategory_label = {
+                'full_game': '',
+                'full_game_dlc': 'Incl DLC',
+                'dlc': 'DLC',
+                'update': 'Update',
+            }.get(game_type, game_type)
+            parts = [game_title, game_year, platform, subcategory_label, version]
+            name = ' '.join(part for part in parts if part)
+            if tag:
+                clean_tag = tag[1:] if tag.startswith('-') else tag
+                name = f"{name}-{clean_tag}"
+            potential_missing = ['title', 'year', 'platform']
+        elif meta['category'] == "MUSIC":
             artist = str(meta.get('artist', '')).strip()
             album = str(meta.get('album', '')).strip()
             music_type = str(meta.get('type', '')).strip()

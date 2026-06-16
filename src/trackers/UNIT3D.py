@@ -79,6 +79,12 @@ class UNIT3D:
                 "name": music_name or str(meta.get("name", "")),
                 "perPage": "100",
             }
+        elif meta.get("is_game"):
+            params_dict = {
+                "categories[]": category_id,
+                "name": str(meta.get("title") or meta.get("name") or ""),
+                "perPage": "100",
+            }
         elif meta.get("is_book"):
             book_name = " ".join(
                 part for part in [str(meta.get("author", "")).strip(), str(meta.get("title", "")).strip()]
@@ -103,7 +109,7 @@ class UNIT3D:
                 "perPage": "100",
             }
         params_list: Optional[ParamsList] = None
-        if self.tracker not in ["OTW"] and not meta.get("is_music") and not meta.get("is_book"):
+        if self.tracker not in ["OTW"] and not meta.get("is_music") and not meta.get("is_book") and not meta.get("is_game"):
             resolutions = await self.get_resolution_id(meta)
             resolution_id = str(resolutions["resolution_id"])
             if resolution_id in ["3", "4"]:
@@ -137,7 +143,7 @@ class UNIT3D:
         request_params = params_list if params_list is not None else list(params_dict.items())
 
         other_request_params: ParamsList = request_params
-        if not meta.get("is_music") and not meta.get("is_book") and not meta.get("search_query"):
+        if not meta.get("is_music") and not meta.get("is_book") and not meta.get("is_game") and not meta.get("search_query"):
             other_params_dict: dict[str, str] = {
                 "tmdbId": str(meta['tmdb']),
                 "categories[]": category_id,
@@ -247,7 +253,7 @@ class UNIT3D:
         return {"name": meta["name"]}
 
     async def get_description(self, meta: dict[str, Any]) -> dict[str, str]:
-        if meta.get("is_music") or meta.get("is_book"):
+        if meta.get("is_music") or meta.get("is_book") or meta.get("is_game"):
             description_path = f"{meta['base_dir']}/tmp/{meta['uuid']}/DESCRIPTION.txt"
             description = ""
             if os.path.exists(description_path):
@@ -284,6 +290,8 @@ class UNIT3D:
         }
 
     async def get_mediainfo(self, meta: dict[str, Any]) -> dict[str, str]:
+        if meta.get("is_game"):
+            return {"mediainfo": ""}
         if meta.get("bdinfo") is not None:
             mediainfo = ""
         else:
@@ -427,8 +435,8 @@ class UNIT3D:
     async def get_mal(self, meta: dict[str, Any]) -> dict[str, str]:
         return {"mal": f"{meta['mal_id']}"}
 
-    async def get_igdb(self, _meta: dict[str, Any]) -> dict[str, str]:
-        return {"igdb": "0"}
+    async def get_igdb(self, meta: dict[str, Any]) -> dict[str, str]:
+        return {"igdb": f"{meta.get('igdb_id', 0)}"}
 
     async def get_stream(self, meta: dict[str, Any]) -> dict[str, str]:
         return {"stream": f"{meta['stream']}"}
