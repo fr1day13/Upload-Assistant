@@ -262,6 +262,12 @@ async def _get_audio_v2(
             [track for track in audio_tracks if track.get("Default") == "Yes"]) > 1
         meta["non_disc_has_pcm_audio_tracks"] = meta.get("type") != "DISC" and any(
             track.get("Format") == "PCM" for track in audio_tracks)
+        if not audio_tracks:
+            meta["no_audio_media"] = True
+            meta["silent"] = True
+            if meta.get('debug'):
+                console.print("[yellow]No audio tracks found; using NoAudio naming fallback.[/yellow]")
+            return "NoAudio", "", False
         first_audio_track = None
         if audio_tracks:
             tracks_with_order = [t for t in audio_tracks if t.get('StreamOrder') and not isinstance(t.get('StreamOrder'), dict)]

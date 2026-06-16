@@ -10,7 +10,6 @@ import aiofiles
 from pymediainfo import MediaInfo
 
 from src.console import console
-from src.exceptions import NoAudioMediaError
 
 
 def validate_file_path(file_path: str) -> str:
@@ -533,7 +532,8 @@ def validate_mediainfo(meta: dict[str, Any], debug: bool, settings: bool = False
         has_audio = any(track.get("@type", "") == "Audio" for track in tracks)
 
         if not has_audio:
-            raise NoAudioMediaError("Upload Assistant does not support no audio media.")
+            meta["no_audio_media"] = True
+            console.print("[bold red]Warning: No audio tracks found in MediaInfo. Continuing as no-audio/silent media.[/bold red]")
 
         for track in tracks:
             track_type = track.get("@type", "")

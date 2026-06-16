@@ -39,7 +39,3 @@ class WeirdSystem(Exception):
 
 class ManualDateException(Exception):
     pass
-
-
-class NoAudioMediaError(Exception):
-    pass
