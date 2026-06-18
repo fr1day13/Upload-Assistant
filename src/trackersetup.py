@@ -216,8 +216,16 @@ class TRACKER_SETUP:
         try:
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-            # Extract 'name' values from the list
-            names: list[str] = [str(item['name']) for item in json_data if 'name' in item]
+            names: list[str] = []
+            for item in json_data:
+                name = item.get('name')
+                if not name and isinstance(item.get('attributes'), dict):
+                    attributes = cast(JsonDict, item['attributes'])
+                    name = attributes.get('name')
+                if not name and isinstance(item.get('group'), str):
+                    name = item.get('group')
+                if name:
+                    names.append(str(name))
             names_csv = ', '.join(names)
             file_content = {
                 "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
@@ -328,7 +336,7 @@ class TRACKER_SETUP:
         if 'taoe' in group_tags:
             group_tags = 'taoe'
 
-        if tracker.upper() in ("AITHER", "LST", "LUME", "SPD"):
+        if tracker.upper() in ("AITHER", "LST", "LUME", "SPD", "ZNTH"):
             file_path = await self.get_banned_groups(meta, tracker)
             if file_path == "empty":
                 console.print(f"[bold red]No banned groups found for '{tracker}'.")
